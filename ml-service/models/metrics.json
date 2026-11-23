@@ -1,0 +1,148 @@
+{
+  "label_order": [
+    "High",
+    "Medium",
+    "Low"
+  ],
+  "dataset_size": 3000,
+  "train_size": 2400,
+  "test_size": 600,
+  "cross_validation": {
+    "Baseline": {
+      "mean_macro_f1": 0.18990845220353417,
+      "std_macro_f1": 0.000283869136328152
+    },
+    "LogisticRegression": {
+      "mean_macro_f1": 0.6514340903170444,
+      "std_macro_f1": 0.02638559538886344
+    },
+    "RandomForest": {
+      "mean_macro_f1": 0.5833567470604698,
+      "std_macro_f1": 0.022661983509621633
+    }
+  },
+  "test_results": {
+    "Baseline": {
+      "accuracy": 0.3983333333333333,
+      "macro_precision": 0.13277777777777777,
+      "macro_recall": 0.3333333333333333,
+      "macro_f1": 0.18990862137465236,
+      "per_class": {
+        "High": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "Medium": {
+          "precision": 0.3983333333333333,
+          "recall": 1.0,
+          "f1": 0.5697258641239571
+        },
+        "Low": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          0,
+          153,
+          0
+        ],
+        [
+          0,
+          239,
+          0
+        ],
+        [
+          0,
+          208,
+          0
+        ]
+      ]
+    },
+    "LogisticRegression": {
+      "accuracy": 0.67,
+      "macro_precision": 0.6820199938898887,
+      "macro_recall": 0.6681474837547935,
+      "macro_f1": 0.6736191439443807,
+      "per_class": {
+        "High": {
+          "precision": 0.7272727272727273,
+          "recall": 0.6274509803921569,
+          "f1": 0.6736842105263158
+        },
+        "Medium": {
+          "precision": 0.594488188976378,
+          "recall": 0.6317991631799164,
+          "f1": 0.6125760649087221
+        },
+        "Low": {
+          "precision": 0.7242990654205608,
+          "recall": 0.7451923076923077,
+          "f1": 0.7345971563981043
+        }
+      },
+      "confusion_matrix": [
+        [
+          96,
+          52,
+          5
+        ],
+        [
+          34,
+          151,
+          54
+        ],
+        [
+          2,
+          51,
+          155
+        ]
+      ]
+    },
+    "RandomForest": {
+      "accuracy": 0.5883333333333334,
+      "macro_precision": 0.5969756207447209,
+      "macro_recall": 0.5783376738028473,
+      "macro_f1": 0.5838662036138255,
+      "per_class": {
+        "High": {
+          "precision": 0.6068376068376068,
+          "recall": 0.46405228758169936,
+          "f1": 0.5259259259259259
+        },
+        "Medium": {
+          "precision": 0.5112781954887218,
+          "recall": 0.5690376569037657,
+          "f1": 0.5386138613861386
+        },
+        "Low": {
+          "precision": 0.6728110599078341,
+          "recall": 0.7019230769230769,
+          "f1": 0.6870588235294117
+        }
+      },
+      "confusion_matrix": [
+        [
+          71,
+          73,
+          9
+        ],
+        [
+          41,
+          136,
+          62
+        ],
+        [
+          5,
+          57,
+          146
+        ]
+      ]
+    }
+  },
+  "chosen_model": "LogisticRegression",
+  "scikit_learn_version": "1.7.2"
+}
