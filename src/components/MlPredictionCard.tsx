@@ -37,6 +37,7 @@ export const MlPredictionCard: React.FC<MlPredictionCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorReason, setErrorReason] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<MlPredictionResponse | null>(null);
+  const [predictionVersion, setPredictionVersion] = useState(0);
   const [featureResult, setFeatureResult] = useState<ReturnType<typeof buildMlFeatures> | null>(null);
 
   // A different evidence item gets a fresh card state, so old results are not reused.
@@ -82,6 +83,7 @@ export const MlPredictionCard: React.FC<MlPredictionCardProps> = ({
     }
 
     setPrediction(result.data);
+    setPredictionVersion((v) => v + 1);
   };
 
   if (!healthChecked || !serviceAvailable) return null;
@@ -186,7 +188,7 @@ export const MlPredictionCard: React.FC<MlPredictionCardProps> = ({
       )}
 
       {prediction && (
-        <details className="mt-4 rounded-md border border-slate-800 bg-slate-900/40 p-3 text-xs text-slate-300">
+        <details key={predictionVersion} className="mt-4 rounded-md border border-slate-800 bg-slate-900/40 p-3 text-xs text-slate-300">
           <summary className="cursor-pointer font-medium text-slate-200">How was this calculated?</summary>
           <p className="mt-2 leading-relaxed text-slate-400">
             A statistical model ({prediction.model_name}) turns the details listed above into an estimate of how important this item may be. It learned from a small set of made-up example records, not from real cases, and its accuracy on real cases is unknown. The estimate is a guide for choosing what to review first. It never replaces the investigator&apos;s own judgement.
