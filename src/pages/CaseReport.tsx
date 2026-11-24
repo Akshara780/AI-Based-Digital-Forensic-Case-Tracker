@@ -76,7 +76,7 @@ export const CaseReport: React.FC = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="py-20 text-center text-xs text-slate-400">Compiling case report...</div>;
+    return <div className="py-20 text-center text-xs text-slate-400">Preparing case summary...</div>;
   }
 
   if (error || !caseData || !analysis) {
@@ -177,25 +177,26 @@ export const CaseReport: React.FC = () => {
         </section>
 
         <section className="mt-5 break-inside-avoid">
-          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">AI Analysis Summary</h2>
-          <p className="mt-2 text-xs"><span className="font-semibold">Computed priority: {analysis.newPriority}.</span> {analysis.explanationSummary}</p>
-          <h3 className="mt-3 text-xs font-bold">Forward-Chaining Rules Fired</h3>
+          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Automated Analysis Summary</h2>
+          <p className="mt-2 text-xs text-slate-700">These results come from automated checks. They are suggestions to help review the case, not proof of wrongdoing. All findings must be confirmed by the investigator.</p>
+          <p className="mt-2 text-xs"><span className="font-semibold">Suggested priority: {analysis.newPriority}.</span> {analysis.explanationSummary}</p>
+          <h3 className="mt-3 text-xs font-bold">Warning-sign checks that matched</h3>
           {analysis.firedRules.length === 0 ? (
-            <p className="mt-1 text-xs">No forward-chaining rules fired.</p>
+            <p className="mt-1 text-xs">No warning-sign checks matched.</p>
           ) : (
             <ul className="mt-1 list-disc space-y-1 pl-5 text-xs">
               {analysis.firedRules.map((rule, index) => <li key={`${rule.ruleId}-${index}`}>{rule.description}</li>)}
             </ul>
           )}
-          <h3 className="mt-3 text-xs font-bold">Evidence Relevance Breakdown</h3>
+          <h3 className="mt-3 text-xs font-bold">How evidence items may be linked</h3>
           {relatedPairs.length === 0 ? (
-            <p className="mt-1 text-xs">No positive pairwise relevance scores were computed.</p>
+            <p className="mt-1 text-xs">No possible links were found between evidence items.</p>
           ) : (
             <ul className="mt-1 space-y-1.5 text-xs">
               {relatedPairs.map((pair) => (
                 <li key={`${pair.evidenceAId}-${pair.evidenceBId}`}>
-                  <span className="font-semibold">{pair.evidenceATitle} / {pair.evidenceBTitle}: {pair.score}%.</span>{' '}
-                  {pair.reasons.length ? pair.reasons.join('; ') : 'No matching heuristics.'}
+                  <span className="font-semibold">{pair.evidenceATitle} / {pair.evidenceBTitle}: {pair.score} out of 100.</span>{' '}
+                  {pair.reasons.length ? pair.reasons.join('; ') : 'No shared details found.'}
                 </li>
               ))}
             </ul>
@@ -203,8 +204,8 @@ export const CaseReport: React.FC = () => {
         </section>
 
         <section className="mt-5 break-inside-avoid">
-          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Constraint Validation Summary</h2>
-          <p className="mt-2 text-xs">Evidence relationships: {analysis.constraintSummary.validPairs} valid, {analysis.constraintSummary.invalidPairs} invalid across {analysis.constraintSummary.totalPairs} pairs.</p>
+          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Consistency check summary</h2>
+          <p className="mt-2 text-xs">Compared {analysis.constraintSummary.totalPairs} evidence pairs: {analysis.constraintSummary.validPairs} with no issues found, {analysis.constraintSummary.invalidPairs} needing review.</p>
         </section>
 
         <section className="mt-5">

@@ -139,13 +139,13 @@ export const Dashboard: React.FC = () => {
           )}
         </section>
 
-        <section className="border-t border-slate-800 pt-5" aria-label="Recent AI alerts">
+        <section className="border-t border-slate-800 pt-5" aria-label="Suggested review notices">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-200">AI Alerts</h2>
+            <h2 className="text-sm font-semibold text-slate-200">Suggested review notices</h2>
             <span className="text-[11px] text-slate-500">Last 7 days</span>
           </div>
           {loading ? <p className="text-xs text-slate-400">Loading alerts...</p> : alerts.length === 0 ? (
-            <p className="text-xs text-slate-400">No recent AI alerts.</p>
+            <p className="text-xs text-slate-400">No recent review notices.</p>
           ) : (
             <ul className="space-y-3">
               {alerts.map(({ event, caseData }) => {

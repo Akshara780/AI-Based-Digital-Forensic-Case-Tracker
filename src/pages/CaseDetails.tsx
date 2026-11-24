@@ -251,7 +251,7 @@ export const CaseDetails: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-20 text-slate-400 text-xs">Loading case workbench...</div>;
+    return <div className="text-center py-20 text-slate-400 text-xs">Loading case details...</div>;
   }
 
   if (error || !caseData) {
@@ -378,7 +378,7 @@ export const CaseDetails: React.FC = () => {
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
             <span>{aiAlert}</span>
           </div>
-          <button onClick={() => setAiAlert(null)} className="text-amber-300 hover:text-white" aria-label="Dismiss AI alert">×</button>
+          <button onClick={() => setAiAlert(null)} className="text-amber-300 hover:text-white" aria-label="Dismiss suggestion notice">×</button>
         </div>
       )}
 
@@ -395,7 +395,7 @@ export const CaseDetails: React.FC = () => {
             }`}
           >
             {tab.icon}
-            <span>{tab.name}</span>
+            <span>{tab.name === 'AI Analysis' ? 'Automated Analysis' : tab.name === 'Relationships' ? 'Links Between Evidence' : tab.name}</span>
             {tab.name === 'Evidence' && (
               <span className="ml-1 px-1.5 py-0.2 bg-slate-800 text-slate-300 rounded text-[10px]">
                 {evidenceList.length}
@@ -419,7 +419,7 @@ export const CaseDetails: React.FC = () => {
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-md">
             <h2 className="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-2">
-              Metadata & Attributes
+              Case details
             </h2>
 
             <div className="space-y-3 text-xs">
@@ -453,7 +453,7 @@ export const CaseDetails: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-200">
-              Evidence Locker ({evidenceList.length} items)
+              Evidence items ({evidenceList.length})
             </h2>
 
             {/* Role rule: VIEWER cannot see Add Evidence button */}
@@ -578,19 +578,19 @@ export const CaseDetails: React.FC = () => {
           {aiAnalysisLoading ? (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center text-slate-400 shadow-md">
               <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-cyan-400/30 border-t-cyan-400" />
-              <p className="text-sm font-medium text-slate-300">Running adaptive case analysis…</p>
+              <p className="text-sm font-medium text-slate-300">Checking this case for possible links and priority suggestions…</p>
             </div>
           ) : aiAnalysisResult ? (
             <div className="space-y-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-md">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
-                    <div className="text-[11px] uppercase tracking-wide text-slate-400 mb-2">Before Priority</div>
+                    <div className="text-[11px] uppercase tracking-wide text-slate-400 mb-2">Current priority</div>
                     <div className="text-3xl font-black text-slate-400">{aiAnalysisResult.previousPriority}</div>
                   </div>
 
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
-                    <div className="text-[11px] uppercase tracking-wide text-slate-400 mb-2">After Priority</div>
+                    <div className="text-[11px] uppercase tracking-wide text-slate-400 mb-2">Suggested priority</div>
                     <div className={`text-4xl font-black ${
                       aiAnalysisResult.newPriority === 'LOW'
                         ? 'text-emerald-400'
@@ -612,20 +612,21 @@ export const CaseDetails: React.FC = () => {
                     disabled={applyingPriority || !aiAnalysisResult.priorityChanged || aiAnalysisResult.newPriority === caseData.priority}
                     className="px-4 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed bg-cyan-500 hover:bg-cyan-400 text-slate-950"
                   >
-                    {applyingPriority ? 'Applying…' : 'Apply Priority Update'}
+                    {applyingPriority ? 'Applying…' : 'Use suggested priority'}
                   </button>
                 </div>
 
                 <div className="mt-3 text-xs text-slate-400">
-                  {aiAnalysisResult.priorityChanged ? 'Priority changed and requires confirmation.' : 'Priority remains the same; no recommendation to apply.'}
+                  {aiAnalysisResult.priorityChanged ? 'The suggested priority is different from the current one. Review it before using it.' : 'The suggested priority is the same as the current one. No change is suggested.'}
                 </div>
               </div>
 
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-md">
-                <h3 className="text-sm font-semibold text-slate-200 mb-4">Evidence Relevance Breakdown</h3>
+                <h3 className="text-sm font-semibold text-slate-200 mb-2">How evidence items may be linked</h3>
+                <p className="mb-4 text-xs text-slate-400">Higher numbers mean the two items share more details, such as the same IP address, device, time or tags. This is a guide, not proof.</p>
 
                 {scoreAllEvidenceForCase(evidenceList, { timeWindowMinutes: 15 }).length === 0 ? (
-                  <div className="text-xs text-slate-400">Not enough evidence pairs are available to compute relevance scores.</div>
+                  <div className="text-xs text-slate-400">There are not enough evidence items yet to look for links.</div>
                 ) : (
                   <div className="space-y-4">
                     {scoreAllEvidenceForCase(evidenceList, { timeWindowMinutes: 15 }).map((pair, index) => (
@@ -641,12 +642,12 @@ export const CaseDetails: React.FC = () => {
                                 ? 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20'
                                 : 'bg-slate-800 text-slate-300 border-slate-700'
                           }`}>
-                            {pair.score}%
+                            {pair.score} out of 100
                           </span>
                         </div>
                         <ul className="space-y-1.5">
                           {pair.reasons.length === 0 ? (
-                            <li className="text-xs text-slate-500 italic">No matching heuristics.</li>
+                            <li className="text-xs text-slate-500 italic">No shared details found.</li>
                           ) : (
                             pair.reasons.map((reason, reasonIndex) => (
                               <li key={`${pair.evidenceAId}-${pair.evidenceBId}-${reasonIndex}`} className="text-xs text-slate-300 flex items-start gap-2">
@@ -667,16 +668,16 @@ export const CaseDetails: React.FC = () => {
                   onClick={() => setAiReasoningOpen((prev) => !prev)}
                   className="flex w-full items-center justify-between text-left"
                 >
-                  <h3 className="text-sm font-semibold text-slate-200">AI Reasoning</h3>
+                  <h3 className="text-sm font-semibold text-slate-200">Why these suggestions were made</h3>
                   {aiReasoningOpen ? <ChevronUp className="w-4 h-4 text-slate-300" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
                 </button>
 
                 {aiReasoningOpen && (
                   <div className="mt-5 space-y-5">
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">Forward-Chaining Rules Fired</div>
+                      <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">Warning-sign checks that matched</div>
                       {aiAnalysisResult.firedRules.length === 0 ? (
-                        <div className="text-xs text-slate-400 italic">No forward-chaining rules fired.</div>
+                        <div className="text-xs text-slate-400 italic">No warning-sign checks matched.</div>
                       ) : (
                         <div className="space-y-3">
                           {aiAnalysisResult.firedRules.map((rule, index) => (
@@ -684,7 +685,7 @@ export const CaseDetails: React.FC = () => {
                               <div className="text-xs text-amber-300 font-semibold">{rule.ruleId}</div>
                               <div className="text-xs text-slate-300 mt-1">{rule.description}</div>
                               <div className="text-xs text-slate-400 mt-2">
-                                Derived fact: {rule.resultFact.subject} / {rule.resultFact.predicate} = {String(rule.resultFact.value)}
+                                What the check found: {rule.resultFact.subject} / {rule.resultFact.predicate} = {String(rule.resultFact.value)}
                               </div>
                             </div>
                           ))}
@@ -693,10 +694,10 @@ export const CaseDetails: React.FC = () => {
                     </div>
 
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">Backward-Chaining Check</div>
+                      <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">Questions checked about this evidence</div>
                       {aiAnalysisResult.backwardCheck ? (
                         <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-                          <div className="text-xs text-cyan-300 font-semibold">Conclusion: {aiAnalysisResult.backwardCheck.conclusion}</div>
+                          <div className="text-xs text-cyan-300 font-semibold">Overall result: {({ 'Strong Support': 'Many matching signs', 'Moderate Support': 'Some matching signs', 'Weak Support': 'Few matching signs', 'Insufficient Evidence': 'Not enough information' } as Record<string, string>)[aiAnalysisResult.backwardCheck.conclusion] ?? aiAnalysisResult.backwardCheck.conclusion}</div>
                           {aiAnalysisResult.backwardCheck.steps.map((step, index) => (
                             <div key={`${step.question}-${index}`} className="flex items-start gap-3">
                               <span className={`mt-0.5 text-xs font-bold ${step.result ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -710,7 +711,7 @@ export const CaseDetails: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-slate-400 italic">No backward check was produced because this case has no evidence.</div>
+                        <div className="text-xs text-slate-400 italic">No questions could be checked because this case has no evidence yet.</div>
                       )}
                     </div>
                   </div>
@@ -718,24 +719,24 @@ export const CaseDetails: React.FC = () => {
               </div>
 
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-md">
-                <h3 className="text-sm font-semibold text-slate-200 mb-4">Constraint Check Summary</h3>
+                <h3 className="text-sm font-semibold text-slate-200 mb-4">Consistency check summary</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Total Pairs</div>
+                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Evidence pairs compared</div>
                     <div className="text-2xl font-bold text-slate-200">{aiAnalysisResult.constraintSummary.totalPairs}</div>
                   </div>
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Valid</div>
+                    <div className="text-[11px] uppercase tracking-wide text-slate-400">No issues found</div>
                     <div className="text-2xl font-bold text-emerald-400">{aiAnalysisResult.constraintSummary.validPairs}</div>
                   </div>
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Invalid</div>
+                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Needs review</div>
                     <div className="text-2xl font-bold text-rose-400">{aiAnalysisResult.constraintSummary.invalidPairs}</div>
                   </div>
                 </div>
 
                 {aiAnalysisResult.constraintSummary.failingPairs.length === 0 ? (
-                  <div className="text-xs text-slate-400 italic">No constraint violations were detected.</div>
+                  <div className="text-xs text-slate-400 italic">No consistency issues were found.</div>
                 ) : (
                   <ul className="space-y-2">
                     {aiAnalysisResult.constraintSummary.failingPairs.map((violation, index) => (
@@ -749,7 +750,7 @@ export const CaseDetails: React.FC = () => {
               </div>
 
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-md">
-                <h3 className="text-sm font-semibold text-slate-200 mb-4">Suggested Next Steps</h3>
+                <h3 className="text-sm font-semibold text-slate-200 mb-4">Suggested next steps (review before acting)</h3>
                 <ul className="space-y-2">
                   {aiAnalysisResult.suggestedNextSteps.map((step, index) => (
                     <li key={`${step}-${index}`} className="text-sm text-slate-200 flex items-start gap-2">
@@ -831,10 +832,10 @@ export const CaseDetails: React.FC = () => {
           <section className="rounded-xl border border-slate-800 bg-slate-900 p-5" aria-label="Evidence relationship graph">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-slate-200">Evidence Relationship Graph</h2>
-                <p className="mt-1 text-xs text-slate-400">Connections show heuristic relevance scores of 30% or higher.</p>
+                <h2 className="text-sm font-semibold text-slate-200">Map of possible links between evidence</h2>
+                <p className="mt-1 text-xs text-slate-400">Lines connect items that scored 30 out of 100 or more.</p>
               </div>
-              <span className="text-[11px] text-slate-500">{evidenceList.length} items / {relationshipPairs.filter((pair) => pair.score >= 30).length} connections</span>
+              <span className="text-[11px] text-slate-500">{evidenceList.length} evidence items / {relationshipPairs.filter((pair) => pair.score >= 30).length} possible links shown</span>
             </div>
             {evidenceList.length === 0 ? (
               <p className="py-12 text-center text-xs text-slate-400">Add evidence to calculate relationships.</p>
@@ -896,9 +897,9 @@ export const CaseDetails: React.FC = () => {
               </div>
             )}
             <div className="mt-3 flex flex-wrap gap-4 text-[10px] text-slate-400">
-              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-cyan-400" />30-44%</span>
-              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-amber-400" />45-69%</span>
-              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-emerald-400" />70%+</span>
+              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-cyan-400" />30–44: weak link</span>
+              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-amber-400" />45–69: possible link</span>
+              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-emerald-400" />70 or more: stronger link</span>
             </div>
           </section>
 
@@ -910,7 +911,7 @@ export const CaseDetails: React.FC = () => {
                   <h3 className="text-sm font-semibold text-slate-100">{selectedEvidence.title}</h3>
                   <p className="mt-1 text-xs text-slate-400">{selectedEvidence.description || 'No description provided.'}</p>
                 </div>
-                <h4 className="mb-3 mt-4 text-xs font-semibold text-slate-200">Relationship scores</h4>
+                <h4 className="mb-3 mt-4 text-xs font-semibold text-slate-200">How closely items may be linked</h4>
                 {selectedRelationships.length === 0 ? (
                   <p className="text-xs text-slate-400">No other evidence is available to compare.</p>
                 ) : (
@@ -919,16 +920,16 @@ export const CaseDetails: React.FC = () => {
                       <li key={`${pair.evidenceAId}-${pair.evidenceBId}`} className="border-b border-slate-800 pb-3 last:border-0">
                         <div className="flex items-start justify-between gap-2 text-xs">
                           <span className="text-slate-200">{otherTitle}</span>
-                          <span className={`shrink-0 font-semibold ${pair.score >= 70 ? 'text-emerald-300' : pair.score >= 30 ? 'text-amber-300' : 'text-slate-400'}`}>{pair.score}%</span>
+                          <span className={`shrink-0 font-semibold ${pair.score >= 70 ? 'text-emerald-300' : pair.score >= 30 ? 'text-amber-300' : 'text-slate-400'}`}>{pair.score} out of 100</span>
                         </div>
-                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{pair.reasons.length ? pair.reasons.join('; ') : 'No matching heuristics.'}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{pair.reasons.length ? pair.reasons.join('; ') : 'No shared details found.'}</p>
                       </li>
                     ))}
                   </ul>
                 )}
               </>
             ) : (
-              <p className="text-xs text-slate-400">Select an evidence node to inspect its scores.</p>
+              <p className="text-xs text-slate-400">Select an evidence item to see its possible links.</p>
             )}
           </aside>
         </div>
