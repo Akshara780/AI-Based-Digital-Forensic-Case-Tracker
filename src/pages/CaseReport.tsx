@@ -4,7 +4,7 @@ import { ArrowLeft, Printer } from 'lucide-react';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { Case, CaseTimelineEvent } from '../types/case';
-import { describeRuleFinding, describeRuleDetails, plainReason, plainSummary } from '../ui/plainLanguage';
+import { describeRuleFinding, describeRuleDetails, plainReason, plainSummary, plainTimelineTitle, plainTimelineDescription } from '../ui/plainLanguage';
 import { Evidence } from '../types/evidence';
 import { getCaseById, listCaseTimeline } from '../services/caseService';
 import { listEvidenceByCase } from '../services/evidenceService';
@@ -228,13 +228,13 @@ export const CaseReport: React.FC = () => {
         <section className="mt-5">
           <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Investigation Timeline</h2>
           {timeline.length === 0 ? (
-            <p className="mt-2 text-xs">No timeline events have been recorded.</p>
+            <p className="mt-2 text-xs">No timeline events recorded for this case yet.</p>
           ) : (
             <ol className="mt-2 space-y-2">
               {timeline.map((event) => (
                 <li key={event.id} className="break-inside-avoid border-l-2 border-slate-400 pl-3 text-xs">
-                  <p className="font-semibold">{new Date(event.timestamp).toLocaleString()} | {event.event}</p>
-                  <p className="mt-0.5 leading-relaxed">{event.description}</p>
+                  <p className="font-semibold">{new Date(event.timestamp).toLocaleString()} | {plainTimelineTitle(event.event)}</p>
+                  <p className="mt-0.5 leading-relaxed">{plainTimelineDescription(event.event, event.description)}</p>
                 </li>
               ))}
             </ol>
