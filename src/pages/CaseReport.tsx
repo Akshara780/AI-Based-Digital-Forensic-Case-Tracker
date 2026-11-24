@@ -4,6 +4,7 @@ import { ArrowLeft, Printer } from 'lucide-react';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { Case, CaseTimelineEvent } from '../types/case';
+import { describeRuleFinding, describeRuleDetails, plainReason } from '../ui/plainLanguage';
 import { Evidence } from '../types/evidence';
 import { getCaseById, listCaseTimeline } from '../services/caseService';
 import { listEvidenceByCase } from '../services/evidenceService';
@@ -184,8 +185,24 @@ export const CaseReport: React.FC = () => {
           {analysis.firedRules.length === 0 ? (
             <p className="mt-1 text-xs">No warning-sign checks matched.</p>
           ) : (
-            <ul className="mt-1 list-disc space-y-1 pl-5 text-xs">
-              {analysis.firedRules.map((rule, index) => <li key={`${rule.ruleId}-${index}`}>{rule.description}</li>)}
+            <ul className="mt-1 space-y-2 text-xs">
+              {analysis.firedRules.map((rule, index) => {
+                const details = describeRuleDetails(rule, evidence);
+                return (
+                  <li key={`${rule.ruleId}-${index}`} className="break-inside-avoid rounded border border-slate-200 bg-slate-50 p-2">
+                    <div>{describeRuleFinding(rule, evidence)}</div>
+                    <details className="mt-1 text-[11px] text-slate-600">
+                      <summary className="cursor-pointer">How was this found?</summary>
+                      <div className="mt-1 space-y-0.5 text-slate-500">
+                        <div>Check: {details.checkName}</div>
+                        <div>What this check does: {details.whatItDoes}</div>
+                        <div>Result: {details.result}</div>
+                        <div className="text-[10px] text-slate-500">Internal name (for developers): {rule.ruleId}</div>
+                      </div>
+                    </details>
+                  </li>
+                );
+              })}
             </ul>
           )}
           <h3 className="mt-3 text-xs font-bold">How evidence items may be linked</h3>
@@ -196,7 +213,7 @@ export const CaseReport: React.FC = () => {
               {relatedPairs.map((pair) => (
                 <li key={`${pair.evidenceAId}-${pair.evidenceBId}`}>
                   <span className="font-semibold">{pair.evidenceATitle} / {pair.evidenceBTitle}: {pair.score} out of 100.</span>{' '}
-                  {pair.reasons.length ? pair.reasons.join('; ') : 'No shared details found.'}
+                  {pair.reasons.length ? pair.reasons.map(plainReason).join('; ') : 'No shared details found.'}
                 </li>
               ))}
             </ul>

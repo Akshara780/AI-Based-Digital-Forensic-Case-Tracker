@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
 import { MlPredictionCard } from '../components/MlPredictionCard';
+import { describeRuleFinding, describeRuleDetails, plainCheckText, plainReason } from '../ui/plainLanguage';
 import {
   ArrowLeft,
   Plus,
@@ -652,7 +653,7 @@ export const CaseDetails: React.FC = () => {
                             pair.reasons.map((reason, reasonIndex) => (
                               <li key={`${pair.evidenceAId}-${pair.evidenceBId}-${reasonIndex}`} className="text-xs text-slate-300 flex items-start gap-2">
                                 <span className="text-emerald-400 font-bold mt-0.5">✓</span>
-                                <span>{reason}</span>
+                                <span>{plainReason(reason)}</span>
                               </li>
                             ))
                           )}
@@ -680,15 +681,23 @@ export const CaseDetails: React.FC = () => {
                         <div className="text-xs text-slate-400 italic">No warning-sign checks matched.</div>
                       ) : (
                         <div className="space-y-3">
-                          {aiAnalysisResult.firedRules.map((rule, index) => (
-                            <div key={`${rule.ruleId}-${index}`} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-                              <div className="text-xs text-amber-300 font-semibold">{rule.ruleId}</div>
-                              <div className="text-xs text-slate-300 mt-1">{rule.description}</div>
-                              <div className="text-xs text-slate-400 mt-2">
-                                What the check found: {rule.resultFact.subject} / {rule.resultFact.predicate} = {String(rule.resultFact.value)}
+                          {aiAnalysisResult.firedRules.map((rule, index) => {
+                            const details = describeRuleDetails(rule, evidenceList);
+                            return (
+                              <div key={`${rule.ruleId}-${index}`} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                                <div className="text-xs text-slate-200">{describeRuleFinding(rule, evidenceList)}</div>
+                                <details className="mt-2 text-[11px] text-slate-400">
+                                  <summary className="cursor-pointer text-slate-400">How was this found?</summary>
+                                  <div className="mt-1 space-y-1 text-slate-500">
+                                    <div>Check: {details.checkName}</div>
+                                    <div>What this check does: {details.whatItDoes}</div>
+                                    <div>Result: {details.result}</div>
+                                    <div className="text-[10px] text-slate-600">Internal name (for developers): {rule.ruleId}</div>
+                                  </div>
+                                </details>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -704,8 +713,8 @@ export const CaseDetails: React.FC = () => {
                                 {step.result ? '✓' : '✗'}
                               </span>
                               <div>
-                                <div className="text-xs text-slate-200 font-medium">{step.question}</div>
-                                <div className="text-xs text-slate-400">{step.detail}</div>
+                                <div className="text-xs text-slate-200 font-medium">{plainCheckText(step.question)}</div>
+                                <div className="text-xs text-slate-400">{plainCheckText(step.detail)}</div>
                               </div>
                             </div>
                           ))}
@@ -922,7 +931,7 @@ export const CaseDetails: React.FC = () => {
                           <span className="text-slate-200">{otherTitle}</span>
                           <span className={`shrink-0 font-semibold ${pair.score >= 70 ? 'text-emerald-300' : pair.score >= 30 ? 'text-amber-300' : 'text-slate-400'}`}>{pair.score} out of 100</span>
                         </div>
-                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{pair.reasons.length ? pair.reasons.join('; ') : 'No shared details found.'}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{pair.reasons.length ? pair.reasons.map(plainReason).join('; ') : 'No shared details found.'}</p>
                       </li>
                     ))}
                   </ul>
