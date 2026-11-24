@@ -182,3 +182,70 @@ export function describeRuleDetails(
     result: 'Matched.',
   };
 }
+
+// Maps a suggested next-step sentence to plain language for display.
+// Variable parts (evidence names/pairs/findings) are kept; unknown strings are unchanged.
+export function plainNextStep(text: string): string {
+  const verifyAccess = text.match(/^Verify the access path and login context for (.+) before closing the case\.$/);
+  if (verifyAccess) return `Check how ${verifyAccess[1]} was accessed and who signed in before closing the case.`;
+
+  if (text === 'Review the timeline across the strongly connected evidence cluster to confirm whether the events are part of one sequence.') {
+    return 'Review the times of the closely linked evidence items to see whether the events happened as one sequence.';
+  }
+
+  const verifyTimeline = text.match(/^Verify the timeline sequence for (.+) to resolve the mismatch in timing or missing shared attributes\.$/);
+  if (verifyTimeline) return `Check the order of events for ${verifyTimeline[1]} to understand the time difference or missing shared details.`;
+
+  const compareRelated = text.match(/^Compare related evidence around "(.+)" to expand the chain of support\.$/);
+  if (compareRelated) {
+    const ruleNames: Record<string, string> = {
+      'Login event matches suspicious IP address': 'repeated IP address',
+      'Evidence items share the same 15-minute window and same device': 'same device, close in time',
+      'Three or more evidence records form a strong cluster': 'closely linked group',
+    };
+    const shortName = Object.prototype.hasOwnProperty.call(ruleNames, compareRelated[1]) ? ruleNames[compareRelated[1]] : compareRelated[1];
+    return `Compare related evidence around this finding: ${shortName} to look for more supporting records.`;
+  }
+
+  const addCorroborating = text.match(/^Add another corroborating record for (.+) to strengthen the case narrative\.$/);
+  if (addCorroborating) return `Add another record that supports or explains ${addCorroborating[1]}.`;
+
+  if (text === 'Collect additional records with the same device, IP, or time window to improve confidence in the inference.') {
+    return 'Collect more records from the same device, the same IP address, or around the same time to better understand what happened.';
+  }
+
+  if (text === 'Add the first evidence records to create a stronger case timeline.') {
+    return 'Add the first evidence items to build a clearer timeline.';
+  }
+
+  if (text === 'Check whether the case already has a suspicious IP, device, or shared timestamp pattern.') {
+    return 'Check whether the case already has the same IP address, the same device, or events recorded at similar times.';
+  }
+
+  if (text === 'Document the basic case narrative before deeper relationship analysis.') {
+    return 'Write down the basic facts of the case before looking for links between evidence.';
+  }
+
+  return text;
+}
+
+// Maps the priority explanation summary to plain language for display.
+// Priority names and numbers are kept; unknown strings are unchanged.
+export function plainSummary(text: string): string {
+  const replaceFragments = (rest: string): string =>
+    rest
+      .replace(/(\d+) related evidence records were identified\./g, '$1 evidence items may be linked.')
+      .replace(/the evidence set did not show enough strong relationships for escalation\./g, 'there were not enough clear links between evidence items to suggest a higher priority.');
+
+  const changed = text.match(/^Case priority changed from (.+) to (.+) because (.+)$/);
+  if (changed) {
+    return `Suggested priority: ${changed[2]} (currently ${changed[1]}) because ${replaceFragments(changed[3])}`;
+  }
+
+  const remained = text.match(/^Case priority remained (.+) because (.+)$/);
+  if (remained) {
+    return `Suggested priority stays ${remained[1]} because ${replaceFragments(remained[2])}`;
+  }
+
+  return text;
+}

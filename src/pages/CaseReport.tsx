@@ -4,7 +4,7 @@ import { ArrowLeft, Printer } from 'lucide-react';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { Case, CaseTimelineEvent } from '../types/case';
-import { describeRuleFinding, describeRuleDetails, plainReason } from '../ui/plainLanguage';
+import { describeRuleFinding, describeRuleDetails, plainReason, plainSummary } from '../ui/plainLanguage';
 import { Evidence } from '../types/evidence';
 import { getCaseById, listCaseTimeline } from '../services/caseService';
 import { listEvidenceByCase } from '../services/evidenceService';
@@ -180,7 +180,7 @@ export const CaseReport: React.FC = () => {
         <section className="mt-5 break-inside-avoid">
           <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Automated Analysis Summary</h2>
           <p className="mt-2 text-xs text-slate-700">These results come from automated checks. They are suggestions to help review the case, not proof of wrongdoing. All findings must be confirmed by the investigator.</p>
-          <p className="mt-2 text-xs"><span className="font-semibold">Suggested priority: {analysis.newPriority}.</span> {analysis.explanationSummary}</p>
+          <p className="mt-2 text-xs"><span className="font-semibold">Suggested priority: {analysis.newPriority}.</span> {plainSummary(analysis.explanationSummary)}</p>
           <h3 className="mt-3 text-xs font-bold">Warning-sign checks that matched</h3>
           {analysis.firedRules.length === 0 ? (
             <p className="mt-1 text-xs">No warning-sign checks matched.</p>

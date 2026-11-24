@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
 import { MlPredictionCard } from '../components/MlPredictionCard';
-import { describeRuleFinding, describeRuleDetails, plainCheckText, plainReason } from '../ui/plainLanguage';
+import { describeRuleFinding, describeRuleDetails, plainCheckText, plainNextStep, plainReason, plainSummary } from '../ui/plainLanguage';
 import {
   ArrowLeft,
   Plus,
@@ -607,7 +607,7 @@ export const CaseDetails: React.FC = () => {
                 </div>
 
                 <div className="mt-5 flex items-center justify-between gap-4 flex-wrap">
-                  <div className="text-base font-semibold text-slate-200">{aiAnalysisResult.explanationSummary}</div>
+                  <div className="text-base font-semibold text-slate-200">{plainSummary(aiAnalysisResult.explanationSummary)}</div>
                   <button
                     onClick={handlePriorityApply}
                     disabled={applyingPriority || !aiAnalysisResult.priorityChanged || aiAnalysisResult.newPriority === caseData.priority}
@@ -764,7 +764,7 @@ export const CaseDetails: React.FC = () => {
                   {aiAnalysisResult.suggestedNextSteps.map((step, index) => (
                     <li key={`${step}-${index}`} className="text-sm text-slate-200 flex items-start gap-2">
                       <span className="text-cyan-400 font-bold mt-0.5">→</span>
-                      <span>{step}</span>
+                      <span>{plainNextStep(step)}</span>
                     </li>
                   ))}
                 </ul>
