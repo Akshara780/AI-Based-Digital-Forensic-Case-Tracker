@@ -8,6 +8,7 @@ import { Evidence } from '../types/evidence';
 import { useAuth } from '../context/AuthContext';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
+import { MlPredictionCard } from '../components/MlPredictionCard';
 import {
   ArrowLeft,
   Plus,
@@ -530,6 +531,12 @@ export const CaseDetails: React.FC = () => {
                       )}
                     </div>
                   </div>
+
+                  <MlPredictionCard
+                    evidence={item}
+                    caseData={caseData}
+                    allEvidence={evidenceList}
+                  />
 
                   {/* Actions & File URL */}
                   <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
