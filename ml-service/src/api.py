@@ -17,9 +17,9 @@ MODEL_PATH = PROJECT_ROOT / "ml-service" / "models" / "relevance_model.joblib"
 METRICS_PATH = PROJECT_ROOT / "ml-service" / "models" / "metrics.json"
 
 DISCLAIMER = (
-    "This is a machine-learning estimate to help prioritise review. "
-    "It is not proof of wrongdoing and must be checked by an investigator "
-    "against the original evidence."
+    "This is an automated estimate to help decide what to review first. "
+    "It is not proof of wrongdoing, and it does not mean anyone did anything wrong. "
+    "An investigator must check it against the original evidence."
 )
 LABEL_ORDER = ["High", "Medium", "Low"]
 
