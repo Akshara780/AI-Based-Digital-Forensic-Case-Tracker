@@ -5,6 +5,7 @@ import { listCases } from '../services/caseService';
 import { supabase } from '../services/supabaseClient';
 import { Case, CaseTimelineEvent } from '../types/case';
 import { Evidence } from '../types/evidence';
+import { plainDashboardNotice } from '../ui/plainLanguage';
 
 interface DashboardAlert {
   event: CaseTimelineEvent;
@@ -83,8 +84,6 @@ export const Dashboard: React.FC = () => {
     { label: 'Evidence Added Today', value: evidenceAddedToday, icon: Plus, color: 'text-emerald-300' },
   ];
 
-  const formatPriority = (value?: string) => value ? `${value[0]}${value.slice(1).toLowerCase()}` : 'Unknown';
-
   return (
     <div className="mx-auto max-w-screen-2xl px-4 py-8 lg:px-8">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
@@ -139,22 +138,17 @@ export const Dashboard: React.FC = () => {
           )}
         </section>
 
-        <section className="border-t border-slate-800 pt-5" aria-label="Recent AI alerts">
+        <section className="border-t border-slate-800 pt-5" aria-label="Suggested review notices">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-200">AI Alerts</h2>
+            <h2 className="text-sm font-semibold text-slate-200">Suggested review notices</h2>
             <span className="text-[11px] text-slate-500">Last 7 days</span>
           </div>
           {loading ? <p className="text-xs text-slate-400">Loading alerts...</p> : alerts.length === 0 ? (
-            <p className="text-xs text-slate-400">No recent AI alerts.</p>
+            <p className="text-xs text-slate-400">No recent review notices.</p>
           ) : (
             <ul className="space-y-3">
               {alerts.map(({ event, caseData }) => {
-                const priorityChange = event.event === 'AI Reprioritization'
-                  ? event.description.match(/(?:from\s+)?(LOW|MEDIUM|HIGH|CRITICAL)\s+to\s+(LOW|MEDIUM|HIGH|CRITICAL)/i)
-                  : null;
-                const message = priorityChange
-                  ? `Case priority changed from ${formatPriority(priorityChange[1])} → ${formatPriority(priorityChange[2])}.`
-                  : 'New related evidence detected.';
+                const message = plainDashboardNotice(event.event, event.description);
                 return (
                   <li key={event.id}>
                     <Link to={`/cases/${caseData.id}?tab=AI%20Analysis`} className="flex items-start gap-2 rounded-lg border border-slate-800 bg-slate-900/60 p-3 transition hover:border-amber-800/70">

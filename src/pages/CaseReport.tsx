@@ -4,6 +4,7 @@ import { ArrowLeft, Printer } from 'lucide-react';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { Case, CaseTimelineEvent } from '../types/case';
+import { describeRuleFinding, describeRuleDetails, plainReason, plainSummary, plainTimelineTitle, plainTimelineDescription } from '../ui/plainLanguage';
 import { Evidence } from '../types/evidence';
 import { getCaseById, listCaseTimeline } from '../services/caseService';
 import { listEvidenceByCase } from '../services/evidenceService';
@@ -76,7 +77,7 @@ export const CaseReport: React.FC = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="py-20 text-center text-xs text-slate-400">Compiling case report...</div>;
+    return <div className="py-20 text-center text-xs text-slate-400">Preparing case summary...</div>;
   }
 
   if (error || !caseData || !analysis) {
@@ -177,25 +178,42 @@ export const CaseReport: React.FC = () => {
         </section>
 
         <section className="mt-5 break-inside-avoid">
-          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">AI Analysis Summary</h2>
-          <p className="mt-2 text-xs"><span className="font-semibold">Computed priority: {analysis.newPriority}.</span> {analysis.explanationSummary}</p>
-          <h3 className="mt-3 text-xs font-bold">Forward-Chaining Rules Fired</h3>
+          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Automated Analysis Summary</h2>
+          <p className="mt-2 text-xs text-slate-700">These results come from automated checks. They are suggestions to help review the case, not proof of wrongdoing. All findings must be confirmed by the investigator.</p>
+          <p className="mt-2 text-xs"><span className="font-semibold">Suggested priority: {analysis.newPriority}.</span> {plainSummary(analysis.explanationSummary)}</p>
+          <h3 className="mt-3 text-xs font-bold">Warning-sign checks that matched</h3>
           {analysis.firedRules.length === 0 ? (
-            <p className="mt-1 text-xs">No forward-chaining rules fired.</p>
+            <p className="mt-1 text-xs">No warning-sign checks matched.</p>
           ) : (
-            <ul className="mt-1 list-disc space-y-1 pl-5 text-xs">
-              {analysis.firedRules.map((rule, index) => <li key={`${rule.ruleId}-${index}`}>{rule.description}</li>)}
+            <ul className="mt-1 space-y-2 text-xs">
+              {analysis.firedRules.map((rule, index) => {
+                const details = describeRuleDetails(rule, evidence);
+                return (
+                  <li key={`${rule.ruleId}-${index}`} className="break-inside-avoid rounded border border-slate-200 bg-slate-50 p-2">
+                    <div>{describeRuleFinding(rule, evidence)}</div>
+                    <details className="mt-1 text-[11px] text-slate-600">
+                      <summary className="cursor-pointer">How was this found?</summary>
+                      <div className="mt-1 space-y-0.5 text-slate-500">
+                        <div>Check: {details.checkName}</div>
+                        <div>What this check does: {details.whatItDoes}</div>
+                        <div>Result: {details.result}</div>
+                        <div className="text-[10px] text-slate-500">Internal name (for developers): {rule.ruleId}</div>
+                      </div>
+                    </details>
+                  </li>
+                );
+              })}
             </ul>
           )}
-          <h3 className="mt-3 text-xs font-bold">Evidence Relevance Breakdown</h3>
+          <h3 className="mt-3 text-xs font-bold">How evidence items may be linked</h3>
           {relatedPairs.length === 0 ? (
-            <p className="mt-1 text-xs">No positive pairwise relevance scores were computed.</p>
+            <p className="mt-1 text-xs">No possible links were found between evidence items.</p>
           ) : (
             <ul className="mt-1 space-y-1.5 text-xs">
               {relatedPairs.map((pair) => (
                 <li key={`${pair.evidenceAId}-${pair.evidenceBId}`}>
-                  <span className="font-semibold">{pair.evidenceATitle} / {pair.evidenceBTitle}: {pair.score}%.</span>{' '}
-                  {pair.reasons.length ? pair.reasons.join('; ') : 'No matching heuristics.'}
+                  <span className="font-semibold">{pair.evidenceATitle} / {pair.evidenceBTitle}: {pair.score} out of 100.</span>{' '}
+                  {pair.reasons.length ? pair.reasons.map(plainReason).join('; ') : 'No shared details found.'}
                 </li>
               ))}
             </ul>
@@ -203,20 +221,20 @@ export const CaseReport: React.FC = () => {
         </section>
 
         <section className="mt-5 break-inside-avoid">
-          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Constraint Validation Summary</h2>
-          <p className="mt-2 text-xs">Evidence relationships: {analysis.constraintSummary.validPairs} valid, {analysis.constraintSummary.invalidPairs} invalid across {analysis.constraintSummary.totalPairs} pairs.</p>
+          <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Consistency check summary</h2>
+          <p className="mt-2 text-xs">Compared {analysis.constraintSummary.totalPairs} evidence pairs: {analysis.constraintSummary.validPairs} with no issues found, {analysis.constraintSummary.invalidPairs} needing review.</p>
         </section>
 
         <section className="mt-5">
           <h2 className="border-b border-slate-300 pb-1 text-sm font-bold uppercase tracking-wide">Investigation Timeline</h2>
           {timeline.length === 0 ? (
-            <p className="mt-2 text-xs">No timeline events have been recorded.</p>
+            <p className="mt-2 text-xs">No timeline events recorded for this case yet.</p>
           ) : (
             <ol className="mt-2 space-y-2">
               {timeline.map((event) => (
                 <li key={event.id} className="break-inside-avoid border-l-2 border-slate-400 pl-3 text-xs">
-                  <p className="font-semibold">{new Date(event.timestamp).toLocaleString()} | {event.event}</p>
-                  <p className="mt-0.5 leading-relaxed">{event.description}</p>
+                  <p className="font-semibold">{new Date(event.timestamp).toLocaleString()} | {plainTimelineTitle(event.event)}</p>
+                  <p className="mt-0.5 leading-relaxed">{plainTimelineDescription(event.event, event.description)}</p>
                 </li>
               ))}
             </ol>
