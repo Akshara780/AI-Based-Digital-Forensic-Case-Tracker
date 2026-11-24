@@ -234,7 +234,8 @@ export function plainNextStep(text: string): string {
 export function plainSummary(text: string): string {
   const replaceFragments = (rest: string): string =>
     rest
-      .replace(/(\d+) related evidence records were identified\./g, '$1 evidence items may be linked.')
+      .replace(/(\d+) related evidence records were identified\./g, (_m, n: string) =>
+        `${n} evidence ${n === '1' ? 'item' : 'items'} may be linked.`)
       .replace(/the evidence set did not show enough strong relationships for escalation\./g, 'there were not enough clear links between evidence items to suggest a higher priority.');
 
   const changed = text.match(/^Case priority changed from (.+) to (.+) because (.+)$/);
@@ -247,5 +248,124 @@ export function plainSummary(text: string): string {
     return `Suggested priority stays ${remained[1]} because ${replaceFragments(remained[2])}`;
   }
 
+  return text;
+}
+
+// Formats a stored priority code (e.g. HIGH) as a readable label (e.g. High).
+function formatPriorityLabel(code: string): string {
+  const upper = code.toUpperCase();
+  if (upper === 'LOW' || upper === 'MEDIUM' || upper === 'HIGH' || upper === 'CRITICAL') {
+    return `${upper[0]}${upper.slice(1).toLowerCase()}`;
+  }
+  return code;
+}
+
+// Maps a stored timeline event name to a plain title for display only.
+// Original stored event names must still be used for comparisons in code.
+export function plainTimelineTitle(event: string): string {
+  const map: Record<string, string> = {
+    'Case Created': 'Case opened',
+    'Evidence Added': 'Evidence added',
+    'Status Updated': 'Case status changed',
+    'AI Reprioritization': 'Priority changed',
+    'AI Detected Related Evidence': 'Possible links found',
+    'AI Analysis': 'Automated check',
+  };
+  return Object.prototype.hasOwnProperty.call(map, event) ? map[event] : event;
+}
+
+// Maps a stored timeline event description to plain language for display only.
+// Titles, case numbers, investigator names and other stored user text are kept unchanged.
+// If the event/description does not match a known pattern, it is returned unchanged.
+export function plainTimelineDescription(event: string, description: string): string {
+  if (event === 'Case Created') {
+    const endMarker = ') was initiated by ';
+    const startMarker = 'Case ';
+    const k = description.lastIndexOf(endMarker);
+    if (description.startsWith(startMarker) && k !== -1 && description.endsWith('.')) {
+      const left = description.slice(startMarker.length, k); // "{case_number} ({title}"
+      const investigator = description.slice(k + endMarker.length, -1);
+      const p = left.indexOf(' (');
+      if (p !== -1) {
+        const caseNumber = left.slice(0, p);
+        const title = left.slice(p + 2);
+        return `Case ${caseNumber} (${title}) was opened by ${investigator}.`;
+      }
+    }
+    return description;
+  }
+
+  if (event === 'Evidence Added') {
+    const m = description.match(/^Evidence Added: ([\s\S]+) \(([^()]+)\)$/);
+    if (m) {
+      return `Added evidence: ${m[1]} (${m[2]}).`;
+    }
+    return description;
+  }
+
+  if (event === 'Status Updated') {
+    const m = description.match(/^Case status changed to (.+)\.$/);
+    if (m) {
+      const code = m[1];
+      // Underscores become spaces, lower-cased, with the first letter capitalised.
+      const pretty = code.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+      return `Case status changed to ${pretty}.`;
+    }
+    return description;
+  }
+
+  if (event === 'AI Reprioritization') {
+    const m = description.match(/^AI Reprioritization: (\S+) to (\S+) - ([\s\S]+)$/);
+    if (m) {
+      const a = formatPriorityLabel(m[1]);
+      const b = formatPriorityLabel(m[2]);
+      const reason = m[3];
+      // STEP 0 finding: updateCasePriority is only called after the investigator clicks
+      // "Use suggested priority" in CaseDetails.tsx (handlePriorityApply), so this event
+      // means the investigator accepted the suggestion.
+      const reasonText = /^AI recommendation updated the case priority to \S+\.$/.test(reason)
+        ? 'The analysis suggested this priority.'
+        : plainSummary(reason);
+      return `Priority changed from ${a} to ${b} after the investigator accepted the suggestion. Reason: ${reasonText}`;
+    }
+    return description;
+  }
+
+  if (event === 'AI Detected Related Evidence') {
+    const m = description.match(/^AI Detected Related Evidence: New evidence '([\s\S]+)' relates to (\d+) existing (item|items) \(Score: (\d+)%\)\.$/);
+    if (m) {
+      return `Possible links found: new evidence '${m[1]}' may be linked to ${m[2]} existing ${m[3]} (link score ${m[4]} out of 100). This is a guide, not proof.`;
+    }
+    return description;
+  }
+
+  if (event === 'AI Analysis') {
+    const m = description.match(/^AI Analysis: No strong relationships found for new evidence '([\s\S]+)'\.$/);
+    if (m) {
+      return `Automated check: no strong links were found for new evidence '${m[1]}' at this time.`;
+    }
+    return description;
+  }
+
+  return description;
+}
+
+// Builds a short dashboard notice message from a stored timeline event (display only).
+// For reprioritization it shows the priority change; other events get a general review message.
+export function plainDashboardNotice(eventName: string, description: string): string {
+  if (eventName === 'AI Reprioritization') {
+    const m = description.match(/(?:from\s+)?(LOW|MEDIUM|HIGH|CRITICAL)\s+to\s+(LOW|MEDIUM|HIGH|CRITICAL)/i);
+    if (m) {
+      return `Priority changed from ${formatPriorityLabel(m[1])} to ${formatPriorityLabel(m[2])}.`;
+    }
+  }
+  return 'New evidence may be linked to other items in this case. Review the links in the case.';
+}
+
+// Maps known timeline loading errors to plain language for display; others unchanged.
+export function plainTimelineError(text: string): string {
+  if (text === 'Unable to load the case timeline.') {
+    return 'Could not load the timeline. Try again.';
+  }
   return text;
 }

@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { scoreAllEvidenceForCase } from '../ai/heuristicMatcher';
 import { onCaseCreated, onNewEvidenceAdded } from '../ai/intelligentAgent';
 import { MlPredictionCard } from '../components/MlPredictionCard';
-import { describeRuleFinding, describeRuleDetails, plainCheckText, plainNextStep, plainReason, plainSummary } from '../ui/plainLanguage';
+import { describeRuleFinding, describeRuleDetails, plainCheckText, plainNextStep, plainReason, plainSummary, plainTimelineDescription, plainTimelineError, plainTimelineTitle } from '../ui/plainLanguage';
 import {
   ArrowLeft,
   Plus,
@@ -778,11 +778,11 @@ export const CaseDetails: React.FC = () => {
         <section className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-md" aria-label="Case timeline">
           <h2 className="text-sm font-semibold text-slate-200 mb-6">Case Timeline</h2>
           {timelineLoading ? (
-            <p className="text-xs text-slate-400">Loading case history...</p>
+        <p className="text-xs text-slate-400">Loading timeline...</p>
           ) : timelineError ? (
-            <p role="alert" className="text-xs text-rose-300">{timelineError}</p>
+        <p role="alert" className="text-xs text-rose-300">{plainTimelineError(timelineError)}</p>
           ) : timeline.length === 0 ? (
-            <p className="text-xs text-slate-400">No timeline events have been recorded for this case.</p>
+        <p className="text-xs text-slate-400">No timeline events recorded for this case yet.</p>
           ) : (
             <ol className="space-y-0">
               {timeline.map((entry, index) => {
@@ -825,8 +825,8 @@ export const CaseDetails: React.FC = () => {
                       <time className="block text-[11px] text-slate-500" dateTime={entry.timestamp}>
                         {new Date(entry.timestamp).toLocaleString()}
                       </time>
-                      <h3 className={`mt-1 text-xs font-semibold ${colorClasses.split(' ')[2]}`}>{entry.event}</h3>
-                      <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-slate-300">{entry.description}</p>
+                      <h3 className={`mt-1 text-xs font-semibold ${colorClasses.split(' ')[2]}`}>{plainTimelineTitle(entry.event)}</h3>
+                      <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-slate-300">{plainTimelineDescription(entry.event, entry.description)}</p>
                     </div>
                   </li>
                 );
